@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -27,8 +28,12 @@ func Connect() (*sqlx.DB, error) {
 
 	conn.SetMaxOpenConns(32)
 
-	if err := waitForDB(conn); err != nil {
+	if err := waitForDB(conn.DB); err != nil {
 		return nil, err
+	}
+
+	if err := migrateDb(conn.DB); err != nil {
+		return nil, errors.Wrap(err, "could not migrate")
 	}
 
 	return conn, nil
@@ -42,11 +47,13 @@ func New() (Database, error) {
 		return nil, err
 	}
 
-	d := &database{conn: conn}
+	d := &database{
+		conn: conn,
+	}
 	return d, nil
 }
 
-func waitForDB(conn *sqlx.DB) error {
+func waitForDB(conn *sql.DB) error {
 	ready := make(chan struct{})
 	go func() {
 		for {
