@@ -21,6 +21,8 @@ type UserAPI struct {
 // UserParameters ...
 type UserParameters struct {
 	model.User
+	model.SessionData
+
 	Password string `json:"password"`
 }
 
@@ -89,8 +91,7 @@ func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 
 	// return user info
 	logger.Info("User created")
-	// utils.WriteJSON(w, http.StatusCreated, createdUser)
-	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, false)
+	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, userParams.SessionData, false)
 }
 
 // Login ...
@@ -128,7 +129,7 @@ func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
 
 	logger.WithField("userID", user.ID).Info("Logged in")
 	// utils.WriteJSON(w, http.StatusOK, user)
-	api.writeTokenResponse(ctx, w, http.StatusOK, user, false)
+	api.writeTokenResponse(ctx, w, http.StatusOK, user, credentials.SessionData, false)
 }
 
 func (api *UserAPI) Get(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +155,7 @@ type TokenResponse struct {
 	User   *model.User `json:"user,omitempty"`
 }
 
-func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWriter, status int, user *model.User, cookie bool) {
+func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWriter, status int, user *model.User, sessionData model.SessionData, cookie bool) {
 
 	// Issue token
 	tokens, err := auth.IssueToken(model.Principal{
@@ -163,6 +164,19 @@ func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWrite
 	if err != nil || tokens == nil {
 		logrus.WithError(err).Warn("error issuing token")
 		utils.WriteError(w, http.StatusUnauthorized, "Error issuing token", nil)
+		return
+	}
+
+	session := &model.Session{
+		UserID:       user.ID,
+		DeviceID:     sessionData.DeviceID,
+		RefreshToken: tokens.RefreshToken,
+		ExpiresAt:    tokens.RefreshTokenExpiresAt,
+	}
+
+	if err := api.DB.SaveRefreshToken(ctx, session); err != nil {
+		logrus.WithError(err).Warn("Error saving session")
+		utils.WriteError(w, http.StatusInternalServerError, "Error saving session", nil)
 		return
 	}
 

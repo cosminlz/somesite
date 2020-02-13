@@ -4,6 +4,8 @@ import "fmt"
 
 // Credentials represents the set of creds for login
 type Credentials struct {
+	SessionData
+
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
