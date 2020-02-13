@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"cabhelp.ro/backend/internal/api"
-	"cabhelp.ro/backend/internal/api/auth"
 	"cabhelp.ro/backend/internal/config"
 	"cabhelp.ro/backend/internal/database"
 	"github.com/namsral/flag"
@@ -20,7 +19,7 @@ func main() {
 	logrus.WithField("version", config.Version).Info("Starting...")
 
 	// Create auth module
-	tokens := auth.NewTokens()
+	// tokens := auth.NewTokens()
 
 	// Create DB
 	db, err := database.New()
@@ -29,7 +28,7 @@ func main() {
 	}
 
 	// Create router
-	router, err := api.NewRouter(db, tokens)
+	router, err := api.NewRouter(db)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error creating router")
 	}

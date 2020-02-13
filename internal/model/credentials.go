@@ -13,6 +13,8 @@ type Principal struct {
 	UserID UserID `json:"userID,omitempty"`
 }
 
+var NilPrincipal Principal
+
 func (p Principal) String() string {
 	if p.UserID != "" {
 		return fmt.Sprintf("UserID[%s]", p.UserID)

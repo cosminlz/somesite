@@ -15,15 +15,16 @@ import (
 
 // UserAPI provides the handlers for user related routes
 type UserAPI struct {
-	DB     database.Database
-	Tokens auth.Tokens
+	DB database.Database
 }
 
+// UserParameters ...
 type UserParameters struct {
 	model.User
 	Password string `json:"password"`
 }
 
+// Create ...
 func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 
 	logger := logrus.WithField("func", "user.go:Create()")
@@ -92,6 +93,7 @@ func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, false)
 }
 
+// Login ...
 func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
 	logger := logrus.WithField("func", "user.go:Login()")
 
@@ -129,26 +131,44 @@ func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
 	api.writeTokenResponse(ctx, w, http.StatusOK, user, false)
 }
 
+func (api *UserAPI) Get(w http.ResponseWriter, r *http.Request) {
+	logger := logrus.WithField("func", "user.go:Get()")
+
+	principal := auth.GetPrincipal(r)
+
+	ctx := r.Context()
+	user, err := api.DB.GetUserByID(ctx, &principal.UserID)
+	if err != nil {
+		logger.WithError(err).Warn("Could not retrive user")
+		utils.WriteError(w, http.StatusInternalServerError, "Could not retrieve user", nil)
+		return
+	}
+
+	logger.WithField("userID", principal.UserID).Info("Get User")
+	utils.WriteJSON(w, http.StatusOK, user)
+}
+
+// TokenResponse ...
 type TokenResponse struct {
-	Token string      `json:"token"`
-	User  *model.User `json:"user,omitempty"`
+	Tokens auth.Tokens `json:"tokens,omitempty"`
+	User   *model.User `json:"user,omitempty"`
 }
 
 func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWriter, status int, user *model.User, cookie bool) {
 
 	// Issue token
-	token, err := api.Tokens.IssueToken(model.Principal{
+	tokens, err := auth.IssueToken(model.Principal{
 		UserID: user.ID,
 	})
-	if err != nil {
+	if err != nil || tokens == nil {
 		logrus.WithError(err).Warn("error issuing token")
 		utils.WriteError(w, http.StatusUnauthorized, "Error issuing token", nil)
 		return
 	}
 
 	tokenResponse := TokenResponse{
-		Token: token,
-		User:  user,
+		Tokens: *tokens,
+		User:   user,
 	}
 
 	if cookie {
