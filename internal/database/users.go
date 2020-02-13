@@ -11,6 +11,7 @@ import (
 type UsersDB interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByID(ctx context.Context, userID *model.UserID) (*model.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 }
 
 var ErrUserExists = errors.New("User with that email exists")
@@ -59,6 +60,21 @@ var getUserByIDQuery = `
 func (db *database) GetUserByID(ctx context.Context, userID *model.UserID) (*model.User, error) {
 	var user model.User
 	if err := db.conn.GetContext(ctx, &user, getUserByIDQuery, userID); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+var getUserByEmailQuery = `
+	SELECT user_id, email, password_hash, created_at, deleted_at
+	FROM users
+	WHERE email = $1;
+`
+
+func (db *database) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
+	if err := db.conn.GetContext(ctx, &user, getUserByEmailQuery, email); err != nil {
 		return nil, err
 	}
 

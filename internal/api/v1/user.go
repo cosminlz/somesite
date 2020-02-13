@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// UserAPI provides the handlers for user related routes
 type UserAPI struct {
 	DB database.Database
 }
@@ -22,7 +23,7 @@ type UserParameters struct {
 
 func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 
-	logger := logrus.WithField("func", "user.go Create()")
+	logger := logrus.WithField("func", "user.go:Create()")
 
 	// load parameters
 	var userParams UserParameters
@@ -85,4 +86,40 @@ func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 	// return user info
 	logger.Info("User created")
 	utils.WriteJSON(w, http.StatusCreated, createdUser)
+}
+
+func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
+	logger := logrus.WithField("func", "user.go:Login()")
+
+	var credentials model.Credentials
+	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+		logger.WithError(err).Warn("could not decode credentials")
+		utils.WriteError(w, http.StatusBadRequest, "could not decode credentials", map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	logger = logrus.WithFields(logrus.Fields{
+		"email": credentials.Email,
+	})
+
+	// Get user by email
+	ctx := r.Context()
+	user, err := api.DB.GetUserByEmail(ctx, credentials.Email)
+	if err != nil {
+		logger.WithError(err).Warn("Could not retrive user")
+		utils.WriteError(w, http.StatusUnauthorized, "Invalid user or password", nil)
+		return
+	}
+
+	// Check password
+	if err := user.CheckPassword(credentials.Password); err != nil {
+		logger.WithError(err).Warn("Invalid password")
+		utils.WriteError(w, http.StatusUnauthorized, "Invalid user or password", nil)
+		return
+	}
+
+	logger.WithField("userID", user.ID).Info("Logged in")
+	utils.WriteJSON(w, http.StatusOK, user)
 }
