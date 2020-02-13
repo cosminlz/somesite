@@ -3,6 +3,9 @@ ENV DATA_DIRECTORY /go/src/cabhelp.ro/backend
 WORKDIR $DATA_DIRECTORY
 ARG APP_VERSION
 ARG CGO_ENABLED=0
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 COPY . .
 RUN go build -ldflags="-X cabhelp.ro/backend/internal/config.Version=$APP_VERSION" cabhelp.ro/backend/cmd/server
 

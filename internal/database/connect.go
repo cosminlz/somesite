@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	databaseURL     = flag.String("database-url", "postgres://data_processor:uber1234@localhost:5432/cabhelp?sslmode=disable", "Database URL")
+	databaseURL     = flag.String("database-url", "", "Database URL")
 	databaseTimeout = flag.Int64("database-timeout-ms", 2000, "")
 )
 

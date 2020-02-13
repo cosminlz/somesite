@@ -6,10 +6,13 @@ import (
 	"cabhelp.ro/backend/internal/api"
 	"cabhelp.ro/backend/internal/config"
 	"cabhelp.ro/backend/internal/database"
+	"github.com/namsral/flag"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+
+	flag.Parse()
 
 	logrus.SetLevel(logrus.DebugLevel)
 
