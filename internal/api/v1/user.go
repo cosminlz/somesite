@@ -1,9 +1,11 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"cabhelp.ro/backend/internal/api/auth"
 	"cabhelp.ro/backend/internal/api/utils"
 	"cabhelp.ro/backend/internal/database"
 	"cabhelp.ro/backend/internal/model"
@@ -13,7 +15,8 @@ import (
 
 // UserAPI provides the handlers for user related routes
 type UserAPI struct {
-	DB database.Database
+	DB     database.Database
+	Tokens auth.Tokens
 }
 
 type UserParameters struct {
@@ -85,7 +88,8 @@ func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 
 	// return user info
 	logger.Info("User created")
-	utils.WriteJSON(w, http.StatusCreated, createdUser)
+	// utils.WriteJSON(w, http.StatusCreated, createdUser)
+	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, false)
 }
 
 func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
@@ -121,5 +125,35 @@ func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.WithField("userID", user.ID).Info("Logged in")
-	utils.WriteJSON(w, http.StatusOK, user)
+	// utils.WriteJSON(w, http.StatusOK, user)
+	api.writeTokenResponse(ctx, w, http.StatusOK, user, false)
+}
+
+type TokenResponse struct {
+	Token string      `json:"token"`
+	User  *model.User `json:"user,omitempty"`
+}
+
+func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWriter, status int, user *model.User, cookie bool) {
+
+	// Issue token
+	token, err := api.Tokens.IssueToken(model.Principal{
+		UserID: user.ID,
+	})
+	if err != nil {
+		logrus.WithError(err).Warn("error issuing token")
+		utils.WriteError(w, http.StatusUnauthorized, "Error issuing token", nil)
+		return
+	}
+
+	tokenResponse := TokenResponse{
+		Token: token,
+		User:  user,
+	}
+
+	if cookie {
+		// TODO later..
+	}
+
+	utils.WriteJSON(w, status, tokenResponse)
 }

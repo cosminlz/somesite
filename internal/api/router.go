@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"cabhelp.ro/backend/internal/api/auth"
 	v1 "cabhelp.ro/backend/internal/api/v1"
 	"github.com/gorilla/mux"
 
@@ -10,7 +11,7 @@ import (
 )
 
 // NewRouter returns a new router
-func NewRouter(db database.Database) (http.Handler, error) {
+func NewRouter(db database.Database, tokens auth.Tokens) (http.Handler, error) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/version", v1.VersionHandler)
@@ -18,7 +19,8 @@ func NewRouter(db database.Database) (http.Handler, error) {
 	apiRouter := router.PathPrefix("/api/v1").Subrouter()
 
 	userAPI := &v1.UserAPI{
-		DB: db,
+		DB:     db,
+		Tokens: tokens,
 	}
 
 	apiRouter.HandleFunc("/users", userAPI.Create).Methods("POST") // create user
