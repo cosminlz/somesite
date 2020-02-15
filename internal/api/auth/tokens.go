@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 
 	"cabhelp.ro/backend/internal/model"
@@ -10,8 +11,12 @@ import (
 )
 
 var jwtKey = []byte("my_secret_key")
-var accessTokenDuration = time.Duration(30) * time.Minute
-var refreshTokenDuration = time.Duration(30*24) * time.Hour
+
+// var accessTokenDuration = time.Duration(30) * time.Minute
+var accessTokenDuration = time.Duration(1) * time.Second
+
+// var refreshTokenDuration = time.Duration(30*24) * time.Hour
+var refreshTokenDuration = time.Duration(1) * time.Second
 
 // Claims ...
 type Claims struct {
@@ -74,12 +79,15 @@ func generateToken(principal model.Principal, duration time.Duration) (string, i
 	return token, tokenClaims.ExpiresAt, nil
 }
 
-func VerifyToken(accessToken string) (*model.Principal, error) {
+func VerifyToken(tokenString string) (*model.Principal, error) {
 	claims := &Claims{}
 
-	token, err := jwt.ParseWithClaims(accessToken, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
+
+	fmt.Println(token)
+	fmt.Println(claims)
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
@@ -87,12 +95,13 @@ func VerifyToken(accessToken string) (*model.Principal, error) {
 		}
 		return nil, err
 	}
-	if !token.Valid {
-		return nil, err
-	}
 
 	principal := &model.Principal{
 		UserID: claims.UserID,
+	}
+
+	if !token.Valid {
+		return principal, err
 	}
 
 	return principal, nil

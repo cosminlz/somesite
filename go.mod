@@ -22,5 +22,6 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	github.com/urfave/cli v1.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/tools/gopls v0.3.2 // indirect
 )

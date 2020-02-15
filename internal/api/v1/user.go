@@ -149,13 +149,65 @@ func (api *UserAPI) Get(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, user)
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string         `json:"refreshToken"`
+	DeviceID     model.DeviceID `json:"deviceID"`
+}
+
+func (api *UserAPI) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	logger := logrus.WithField("func", "user.go:RefreshToken")
+
+	var refreshTokenRequest RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&refreshTokenRequest); err != nil {
+		logger.WithError(err).Warn("Could not decode refresh token response")
+		utils.WriteError(w, http.StatusBadRequest, "Could not decode refresh token response", map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	logger = logger.WithFields(logrus.Fields{
+		"deviceID": refreshTokenRequest.DeviceID,
+	})
+
+	principal, err := auth.VerifyToken(refreshTokenRequest.RefreshToken)
+	if err != nil {
+		logger.WithError(err).Warn("Error validating token")
+		utils.WriteError(w, http.StatusUnauthorized, "error validating token", nil)
+		return
+	}
+
+	session := model.Session{
+		UserID:       principal.UserID,
+		DeviceID:     refreshTokenRequest.DeviceID,
+		RefreshToken: refreshTokenRequest.RefreshToken,
+	}
+
+	ctx := r.Context()
+
+	existingSession, err := api.DB.GetSession(ctx, session)
+	if err != nil || existingSession == nil {
+		logger.WithError(err).Warn("Error session doesn't exist")
+		utils.WriteError(w, http.StatusUnauthorized, "Error session doesn't exist", nil)
+		return
+	}
+
+	logger.WithField("UserID", principal.UserID).Debug("Refresh Token")
+}
+
 // TokenResponse ...
 type TokenResponse struct {
 	Tokens auth.Tokens `json:"tokens,omitempty"`
 	User   *model.User `json:"user,omitempty"`
 }
 
-func (api *UserAPI) writeTokenResponse(ctx context.Context, w http.ResponseWriter, status int, user *model.User, sessionData model.SessionData, cookie bool) {
+func (api *UserAPI) writeTokenResponse(
+	ctx context.Context,
+	w http.ResponseWriter,
+	status int,
+	user *model.User,
+	sessionData model.SessionData,
+	cookie bool) {
 
 	// Issue token
 	tokens, err := auth.IssueToken(model.Principal{

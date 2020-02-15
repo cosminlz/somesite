@@ -28,7 +28,8 @@ func NewRouter(db database.Database) (http.Handler, error) {
 	// apiRouter.HandleFunc("/users/{userID}", userAPI.GetUserByID).Methods("PATCH") // update user
 	// apiRouter.HandleFunc("/users/{userID}", userAPI.GetUserByID).Methods("DELETE") // delete user
 
-	apiRouter.HandleFunc("/login", userAPI.Login).Methods("POST") // create user
+	apiRouter.HandleFunc("/login", userAPI.Login).Methods("POST")          // login
+	apiRouter.HandleFunc("/refresh", userAPI.RefreshToken).Methods("POST") // refresh token
 
 	router.Use(auth.AuthorizationToken)
 

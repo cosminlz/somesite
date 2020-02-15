@@ -9,6 +9,7 @@ import (
 
 type SessionsDB interface {
 	SaveRefreshToken(ctx context.Context, session *model.Session) error
+	GetSession(ctx context.Context, session model.Session) (*model.Session, error)
 }
 
 var saveRefreshTokenQuery = `
@@ -27,4 +28,21 @@ func (db *database) SaveRefreshToken(ctx context.Context, session *model.Session
 		return errors.Wrap(err, "could not save refresh token")
 	}
 	return nil
+}
+
+var getSessionQuery = `
+	SELECT user_id, device_id, refresh_token, expires_at
+	FROM user_sessions
+	WHERE user_id = $1 AND
+		  device_id = $2 AND
+		  refresh_token = $3 AND
+		  to_timestamp(expires_at) > NOW();
+`
+
+func (db *database) GetSession(ctx context.Context, inputSession model.Session) (*model.Session, error) {
+	var session model.Session
+	if err := db.conn.GetContext(ctx, &session, getSessionQuery, inputSession.UserID, inputSession.DeviceID, inputSession.RefreshToken); err != nil {
+		return nil, err
+	}
+	return &session, nil
 }
