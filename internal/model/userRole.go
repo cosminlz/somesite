@@ -1,7 +1,11 @@
 package model
 
-type UserRole string
+type Role string
 
 const (
-	RoleAdmin UserRole = "admin"
+	RoleAdmin Role = "admin"
 )
+
+type UserRole struct {
+	Role Role `json:"role" db:"role"`
+}
