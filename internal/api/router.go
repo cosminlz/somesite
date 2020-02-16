@@ -12,6 +12,7 @@ import (
 
 // NewRouter returns a new router
 func NewRouter(db database.Database) (http.Handler, error) {
+	permissions := auth.NewPermissions(db)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/version", v1.VersionHandler)
@@ -31,9 +32,9 @@ func NewRouter(db database.Database) (http.Handler, error) {
 	apiRouter.HandleFunc("/login", userAPI.Login).Methods("POST")          // login
 	apiRouter.HandleFunc("/refresh", userAPI.RefreshToken).Methods("POST") // refresh token
 
-	apiRouter.HandleFunc("/users/{userID}/roles", userAPI.GrantRole).Methods("POST")    // grant role
-	apiRouter.HandleFunc("/users/{userID}/roles", userAPI.GetRoleList).Methods("GET")   // get roles
-	apiRouter.HandleFunc("/users/{userID}/roles", userAPI.RevokeRole).Methods("DELETE") // delete role
+	apiRouter.HandleFunc("/users/{userID}/roles", permissions.Wrap(userAPI.GrantRole, auth.Admin)).Methods("POST") // grant role
+	apiRouter.HandleFunc("/users/{userID}/roles", userAPI.GetRoleList).Methods("GET")                              // get roles
+	apiRouter.HandleFunc("/users/{userID}/roles", userAPI.RevokeRole).Methods("DELETE")                            // delete role
 
 	router.Use(auth.AuthorizationToken)
 

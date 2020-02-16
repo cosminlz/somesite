@@ -1,3 +1,5 @@
+# github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
+github.com/bluele/gcache
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/golang-migrate/migrate/v4 v4.8.0
@@ -28,7 +30,7 @@ github.com/namsral/flag
 github.com/pkg/errors
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
+# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 # golang.org/x/sys v0.0.0-20191210023423-ac6580df4449

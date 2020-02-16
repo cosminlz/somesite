@@ -3,6 +3,7 @@ module cabhelp.ro/backend
 go 1.13
 
 require (
+	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
 	github.com/containerd/console v0.0.0-20191219165238-8375c3424e4d // indirect
 	github.com/containerd/continuity v0.0.0-20200107194136-26c1120b8d41 // indirect
 	github.com/containerd/fifo v0.0.0-20191213151349-ff969a566b00 // indirect
