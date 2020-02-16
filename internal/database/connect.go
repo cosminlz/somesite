@@ -13,7 +13,7 @@ import (
 
 var (
 	databaseURL     = flag.String("database-url", "", "Database URL")
-	databaseTimeout = flag.Int64("database-timeout-ms", 2000, "")
+	databaseTimeout = flag.Int64("database-timeout-ms", 5000, "")
 )
 
 func Connect() (*sqlx.DB, error) {
