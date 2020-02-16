@@ -16,5 +16,3 @@ RUN apk add --update --no-cache \
 COPY internal/database/migrations ${DATA_DIRECTORY}/internal/database/migrations
 COPY --from=builder $DATA_DIRECTORY/server /backend
 ENTRYPOINT ["/backend"]
-
-

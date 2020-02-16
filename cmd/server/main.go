@@ -18,9 +18,6 @@ func main() {
 
 	logrus.WithField("version", config.Version).Info("Starting...")
 
-	// Create auth module
-	// tokens := auth.NewTokens()
-
 	// Create DB
 	db, err := database.New()
 	if err != nil {

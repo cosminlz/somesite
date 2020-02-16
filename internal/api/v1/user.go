@@ -91,7 +91,7 @@ func (api *UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 
 	// return user info
 	logger.Info("User created")
-	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, userParams.SessionData, false)
+	api.writeTokenResponse(ctx, w, http.StatusCreated, createdUser, &userParams.SessionData, false)
 }
 
 // Login ...
@@ -128,8 +128,7 @@ func (api *UserAPI) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.WithField("userID", user.ID).Info("Logged in")
-	// utils.WriteJSON(w, http.StatusOK, user)
-	api.writeTokenResponse(ctx, w, http.StatusOK, user, credentials.SessionData, false)
+	api.writeTokenResponse(ctx, w, http.StatusOK, user, &credentials.SessionData, false)
 }
 
 func (api *UserAPI) Get(w http.ResponseWriter, r *http.Request) {
@@ -193,6 +192,17 @@ func (api *UserAPI) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.WithField("UserID", principal.UserID).Debug("Refresh Token")
+
+	user, err := api.DB.GetUserByID(ctx, &principal.UserID)
+	if err != nil {
+		logger.WithError(err).Warn("Could not retrive user")
+		utils.WriteError(w, http.StatusInternalServerError, "Could not retrieve user", nil)
+		return
+	}
+
+	api.writeTokenResponse(ctx, w, http.StatusOK, user, &model.SessionData{
+		DeviceID: existingSession.DeviceID,
+	}, false)
 }
 
 // TokenResponse ...
@@ -206,7 +216,7 @@ func (api *UserAPI) writeTokenResponse(
 	w http.ResponseWriter,
 	status int,
 	user *model.User,
-	sessionData model.SessionData,
+	sessionData *model.SessionData,
 	cookie bool) {
 
 	// Issue token

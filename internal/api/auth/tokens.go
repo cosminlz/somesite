@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"time"
 
 	"cabhelp.ro/backend/internal/model"
@@ -13,10 +12,10 @@ import (
 var jwtKey = []byte("my_secret_key")
 
 // var accessTokenDuration = time.Duration(30) * time.Minute
-var accessTokenDuration = time.Duration(1) * time.Second
+var accessTokenDuration = time.Duration(60) * time.Second
 
 // var refreshTokenDuration = time.Duration(30*24) * time.Hour
-var refreshTokenDuration = time.Duration(1) * time.Second
+var refreshTokenDuration = time.Duration(120) * time.Second
 
 // Claims ...
 type Claims struct {
@@ -85,9 +84,6 @@ func VerifyToken(tokenString string) (*model.Principal, error) {
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-
-	fmt.Println(token)
-	fmt.Println(claims)
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
